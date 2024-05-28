@@ -1,4 +1,5 @@
-const TEXT_ELEMENT = "TEXT_ELEMENT";
+export const TEXT_ELEMENT = "TEXT_ELEMENT";
+export const PROP_CHILDREN = "children";
 
 class Element {
 	constructor(type, props) {
