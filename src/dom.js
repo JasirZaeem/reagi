@@ -1,8 +1,6 @@
 import { PROP_CHILDREN, TEXT_ELEMENT } from "./jsx.js";
-import { Fiber, createRootFiber } from "./fiber.js";
-import { beginWorkLoop, queueTask } from "./scheduler.js";
 
-function createDom(fiber) {
+export function createDom(fiber) {
 	const dom =
 		fiber.type === TEXT_ELEMENT
 			? document.createTextNode("")
@@ -16,54 +14,17 @@ function createDom(fiber) {
 	return dom;
 }
 
-export function render(element, container) {
-	queueTask(
-		createRootFiber(container, {
-			children: [element],
-		}),
-	);
-	beginWorkLoop(renderUnit, () => {});
+export function commitRoot(rootFiber) {
+	commitWork(rootFiber.child);
 }
 
-function renderUnit(fiber) {
-	fiber.dom ??= createDom(fiber);
-	fiber.parent?.dom.appendChild(fiber.dom);
+function commitWork(fiber) {
+	if (!fiber) return;
 
-	const childrenElements = fiber.props.children;
-	let idx = 0;
-	let prevSibling = null;
+	const parentDom = fiber.parent.dom;
+	parentDom.appendChild(fiber.dom);
 
-	while (idx < childrenElements.length) {
-		const element = childrenElements[idx];
-
-		const newFiber = new Fiber(element.type, element.props, null, fiber);
-
-		if (idx === 0) {
-			// First child element becomes child of the fiber
-			fiber.child = newFiber;
-		} else {
-			// The rest become sibling of the previous fiber
-			prevSibling.sibling = newFiber;
-		}
-
-		prevSibling = newFiber;
-		++idx;
-	}
-
-	if (fiber.child) {
-		// Traverse to child
-		return fiber.child;
-	}
-
-	let nextFiber = fiber;
-
-	while (nextFiber) {
-		if (nextFiber.sibling) {
-			// Then the child's siblings
-			return nextFiber.sibling;
-		}
-
-		// The back to parent and its siblings
-		nextFiber = nextFiber.parent;
-	}
+	// Traverse fiber tree
+	commitWork(fiber.child);
+	commitWork(fiber.sibling);
 }

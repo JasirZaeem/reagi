@@ -30,7 +30,7 @@ function workLoop(deadline) {
 	}
 
 	if (!workState.nextSubTask && workState.ongoingTask) {
-		actors.handleTaskEnd();
+		actors.handleTaskEnd(workState.ongoingTask);
 	}
 
 	// Wait for next chance to work
