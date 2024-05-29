@@ -25,3 +25,7 @@ export function createElement(type, props, ...children) {
 			),
 	});
 }
+
+export function Fragment(props) {
+	return props.children;
+}

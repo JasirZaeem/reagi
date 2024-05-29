@@ -2,6 +2,7 @@ import { createRootFiber } from "./fiber.js";
 import { beginWorkLoop, queueTask } from "./scheduler.js";
 import { commitRoot, addDom } from "./dom.js";
 import { reconcileChildren } from "./reconciler.js";
+import { Fragment } from "./jsx.js";
 
 /** @typedef {import("./fiber.js").Fiber} Fiber */
 
@@ -81,7 +82,10 @@ function renderUnit(fiber) {
  * @param {Fiber} fiber
  */
 function updateFunctionComponent(fiber) {
-	const children = [fiber.type(fiber.props)];
+	const children =
+		fiber.type === Fragment
+			? fiber.type(fiber.props)
+			: [fiber.type(fiber.props)];
 	reconcileChildren(fiber, children);
 }
 
