@@ -3,7 +3,7 @@ import { renderState } from "./renderer.js";
 
 export const EFFECT_TAG_UPDATED = "UPDATED";
 export const EFFECT_TAG_CREATED = "CREATED";
-export const EFFECT_TAG_DELETED = "CREATED";
+export const EFFECT_TAG_DELETED = "DELETED";
 
 export function reconcileChildren(fiber, childrenElements) {
 	let oldFiber = fiber.alternate?.child;
