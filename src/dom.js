@@ -37,19 +37,37 @@ export function commitRoot(rootFiber, deletions) {
 function commitWork(fiber) {
 	if (!fiber) return;
 
-	const parentDom = fiber.parent.dom;
+	let parentDomFiber = fiber.parent;
+	// Find first ancestor with a dom if parent does not have it
+	while (!parentDomFiber.dom) {
+		parentDomFiber = parentDomFiber.parent;
+	}
+	const parentDom = parentDomFiber.dom;
+
 	if (fiber.effectTag === EFFECT_TAG_CREATED && fiber.dom) {
 		parentDom.appendChild(fiber.dom);
 	} else if (fiber.effectTag === EFFECT_TAG_UPDATED && fiber.dom) {
 		updateDom(fiber);
 	} else if (fiber.effectTag === EFFECT_TAG_DELETED) {
-		fiber.dom.remove();
+		commitDeletion(fiber);
 		return;
 	}
 
 	// Traverse fiber tree
 	commitWork(fiber.child);
 	commitWork(fiber.sibling);
+}
+
+/**
+ * @param {Fiber} fiber
+ */
+function commitDeletion(fiber) {
+	if (fiber.dom) {
+		fiber.dom.remove();
+		fiber.dom = null;
+	} else {
+		commitDeletion(fiber.child);
+	}
 }
 
 /**
