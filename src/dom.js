@@ -78,13 +78,6 @@ function updateDom(fiber) {
 	const prevProps = fiber.alternate?.props ?? {};
 	const nextProps = fiber.props;
 
-	if (dom.nodeType === Node.TEXT_NODE) {
-		// Text node, only update nodeValue
-		if (prevProps.nodeValue === nextProps.nodeValue) return;
-		dom.nodeValue = nextProps.nodeValue;
-		return;
-	}
-
 	for (const [propName, propValue] of Object.entries(prevProps)) {
 		if (propName === PROP_CHILDREN) continue;
 
@@ -98,7 +91,7 @@ function updateDom(fiber) {
 
 		// Remove old props
 		if (propName in nextProps) continue;
-		dom.removeAttribute(propName);
+		dom[propName] = "";
 	}
 
 	for (const [propName, propValue] of Object.entries(nextProps)) {
@@ -112,6 +105,6 @@ function updateDom(fiber) {
 			continue;
 		}
 
-		dom.setAttribute(propName, propValue);
+		dom[propName] = propValue;
 	}
 }
