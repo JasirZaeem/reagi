@@ -31,6 +31,7 @@ function workLoop(deadline) {
 
 	if (!workState.nextSubTask && workState.ongoingTask) {
 		actors.handleTaskEnd(workState.ongoingTask);
+        workState.ongoingTask = null;
 	}
 
 	// Wait for next chance to work
