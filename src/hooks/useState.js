@@ -1,6 +1,6 @@
-import { createRootFiber } from "./fiber.js";
-import { renderState } from "./renderer.js";
-import { queueTask } from "./scheduler.js";
+import { createRootFiber } from "../fiber.js";
+import { renderState } from "../renderer.js";
+import { queueTask } from "../scheduler.js";
 
 export const STATE_HOOK = "useState";
 
