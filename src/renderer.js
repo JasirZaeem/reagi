@@ -9,11 +9,15 @@ import { reconcileChildren } from "./reconciler.js";
  * @typedef {object} RenderState
  * @property {Fiber | null} currentRoot
  * @property {Fiber[]} deletions
+ * @property {Fiber} currentFiber
+ * @property {hookIdx} number
  */
 /** @type {RenderState} */
 export const renderState = {
 	currentRoot: null,
 	deletions: [],
+	currentFiber: null,
+	hookIdx: 0,
 };
 
 /**
@@ -23,6 +27,7 @@ function afterRender(rootFiber) {
 	commitRoot(rootFiber, renderState.deletions);
 	// The current rendered root to be reconciled against during next render
 	renderState.currentRoot = rootFiber;
+	renderState.deletions = [];
 }
 
 export function render(element, container) {
@@ -42,6 +47,10 @@ export function render(element, container) {
  * @param {Fiber} fiber
  */
 function renderUnit(fiber) {
+	// Set fiber being rendered currently
+	renderState.currentFiber = fiber;
+	renderState.hookIdx = 0;
+
 	const isFunctionComponent = fiber.type instanceof Function;
 
 	if (isFunctionComponent) {
@@ -72,8 +81,8 @@ function renderUnit(fiber) {
  * @param {Fiber} fiber
  */
 function updateFunctionComponent(fiber) {
-    const children = [fiber.type(fiber.props)];
-    reconcileChildren(fiber, children)
+	const children = [fiber.type(fiber.props)];
+	reconcileChildren(fiber, children);
 }
 
 /**

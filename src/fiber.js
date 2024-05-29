@@ -15,6 +15,10 @@ export class Fiber {
 
 		// Lifecycle
 		this.effectTag = effectTag;
+
+        // Hooks
+        this.hooks = [];
+        this.isRerenderQueued = false;
 	}
 }
 

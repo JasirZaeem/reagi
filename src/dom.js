@@ -26,7 +26,7 @@ export function addDom(fiber) {
  */
 export function commitRoot(rootFiber, deletions) {
 	for (const deletedFiber of deletions) {
-		commitWork(deletedFiber);
+		commitDeletion(deletedFiber);
 	}
 	commitWork(rootFiber.child);
 }

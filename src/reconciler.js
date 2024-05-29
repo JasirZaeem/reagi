@@ -54,7 +54,7 @@ export function reconcileChildren(fiber, childrenElements) {
 		if (idx === 0) {
 			// First child element becomes child of the fiber
 			fiber.child = newFiber;
-		} else {
+		} else if (prevSibling) {
 			// The rest become sibling of the previous fiber
 			prevSibling.sibling = newFiber;
 		}
