@@ -1,6 +1,6 @@
 import { Fiber, createRootFiber } from "./fiber.js";
 import { beginWorkLoop, queueTask } from "./scheduler.js";
-import { commitRoot, createDom } from "./dom.js";
+import { commitRoot, addDom } from "./dom.js";
 import { reconcileChildren } from "./reconciler.js";
 
 export const renderState = {
@@ -28,7 +28,9 @@ export function render(element, container) {
 }
 
 function renderUnit(fiber) {
-	fiber.dom ??= createDom(fiber);
+	if (!fiber.dom) {
+		addDom(fiber);
+	}
 
 	const childrenElements = fiber.props.children;
 	reconcileChildren(fiber, childrenElements);

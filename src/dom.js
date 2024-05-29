@@ -8,20 +8,16 @@ import {
 /** @typedef {import("./fiber.js").Fiber} Fiber */
 
 /**
+ * Creates and updates a new dom node and adds it to provided fiber node
  * @param {Fiber} fiber
  */
-export function createDom(fiber) {
-	const dom =
+export function addDom(fiber) {
+	fiber.dom =
 		fiber.type === TEXT_ELEMENT
 			? document.createTextNode("")
 			: document.createElement(fiber.type);
 
-	for (const [propName, propValue] of Object.entries(fiber.props)) {
-		if (propName === PROP_CHILDREN) continue;
-		dom[propName] = propValue;
-	}
-
-	return dom;
+	updateDom(fiber);
 }
 
 /**
@@ -45,7 +41,7 @@ function commitWork(fiber) {
 	if (fiber.effectTag === EFFECT_TAG_CREATED && fiber.dom) {
 		parentDom.appendChild(fiber.dom);
 	} else if (fiber.effectTag === EFFECT_TAG_UPDATED && fiber.dom) {
-		updateDom();
+		updateDom(fiber);
 	} else if (fiber.effectTag === EFFECT_TAG_DELETED) {
 		fiber.dom.remove();
 		return;
@@ -56,6 +52,48 @@ function commitWork(fiber) {
 	commitWork(fiber.sibling);
 }
 
-function updateDom() {
-	//TODO
+/**
+ * @param {Fiber} fiber
+ */
+function updateDom(fiber) {
+	const dom = fiber.dom;
+	const prevProps = fiber.alternate?.props ?? {};
+	const nextProps = fiber.props;
+
+	if (dom.nodeType === Node.TEXT_NODE) {
+		// Text node, only update nodeValue
+		if (prevProps.nodeValue === nextProps.nodeValue) return;
+		dom.nodeValue = nextProps.nodeValue;
+		return;
+	}
+
+	for (const [propName, propValue] of Object.entries(prevProps)) {
+		if (propName === PROP_CHILDREN) continue;
+
+		// Remove old or changed event listeners
+		if (propName.startsWith("on")) {
+			if (propValue === nextProps[propName]) continue;
+			const eventType = propName.substring(2).toLowerCase();
+			dom.removeEventListener(eventType, propValue);
+			continue;
+		}
+
+		// Remove old props
+		if (propName in nextProps) continue;
+		dom.removeAttribute(propName);
+	}
+
+	for (const [propName, propValue] of Object.entries(nextProps)) {
+		if (propName === PROP_CHILDREN) continue;
+		if (propValue === prevProps[propName]) continue;
+
+		// Add new or updated props
+		if (propName.startsWith("on")) {
+			const eventType = propName.substring(2).toLowerCase();
+			dom.addEventListener(eventType, propValue);
+			continue;
+		}
+
+		dom.setAttribute(propName, propValue);
+	}
 }
