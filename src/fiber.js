@@ -1,5 +1,5 @@
 export class Fiber {
-	constructor(type, props, dom, parent) {
+	constructor(type, props, dom, parent, alternate, effectTag) {
 		// Data
 		this.type = type;
 		this.props = props;
@@ -9,9 +9,15 @@ export class Fiber {
 		this.parent = parent;
 		this.child = null;
 		this.sibling = null;
+
+		// Reconciliation
+		this.alternate = alternate;
+
+		// Lifecycle
+		this.effectTag = effectTag;
 	}
 }
 
-export function createRootFiber(dom, props) {
-	return new Fiber(null, props, dom, null);
+export function createRootFiber(dom, props, alternate) {
+	return new Fiber(null, props, dom, null, alternate, null);
 }

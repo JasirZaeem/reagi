@@ -1,39 +1,37 @@
 import { Fiber, createRootFiber } from "./fiber.js";
 import { beginWorkLoop, queueTask } from "./scheduler.js";
 import { commitRoot, createDom } from "./dom.js";
+import { reconcileChildren } from "./reconciler.js";
+
+export const renderState = {
+	currentRoot: null,
+	deletions: [],
+};
+
+function afterRender(rootFiber) {
+	commitRoot(rootFiber, renderState.deletions);
+	// The current rendered root to be reconciled against during next render
+	renderState.currentRoot = rootFiber;
+}
 
 export function render(element, container) {
 	queueTask(
-		createRootFiber(container, {
-			children: [element],
-		}),
+		createRootFiber(
+			container,
+			{
+				children: [element],
+			},
+			renderState.currentRoot,
+		),
 	);
-	beginWorkLoop(renderUnit, commitRoot);
+	beginWorkLoop(renderUnit, afterRender);
 }
 
 function renderUnit(fiber) {
 	fiber.dom ??= createDom(fiber);
 
 	const childrenElements = fiber.props.children;
-	let idx = 0;
-	let prevSibling = null;
-
-	while (idx < childrenElements.length) {
-		const element = childrenElements[idx];
-
-		const newFiber = new Fiber(element.type, element.props, null, fiber);
-
-		if (idx === 0) {
-			// First child element becomes child of the fiber
-			fiber.child = newFiber;
-		} else {
-			// The rest become sibling of the previous fiber
-			prevSibling.sibling = newFiber;
-		}
-
-		prevSibling = newFiber;
-		++idx;
-	}
+	reconcileChildren(fiber, childrenElements);
 
 	if (fiber.child) {
 		// Traverse to child
