@@ -3,6 +3,7 @@ import { beginWorkLoop, queueTask } from "./scheduler.js";
 import { commitRoot, addDom } from "./dom.js";
 import { reconcileChildren } from "./reconciler.js";
 import { Fragment } from "./jsx.js";
+import { EFFECT_HOOK } from "./hooks/useEffect.js";
 
 /** @typedef {import("./fiber.js").Fiber} Fiber */
 
@@ -11,7 +12,10 @@ import { Fragment } from "./jsx.js";
  * @property {Fiber | null} currentRoot
  * @property {Fiber[]} deletions
  * @property {Fiber} currentFiber
- * @property {hookIdx} number
+ * @property {number} hookIdx
+ * @property {object[]} effects
+ * @property {object[]} currentFiberEffects
+ * @property {object[]} effectCancellations
  */
 /** @type {RenderState} */
 export const renderState = {
@@ -19,16 +23,55 @@ export const renderState = {
 	deletions: [],
 	currentFiber: null,
 	hookIdx: 0,
+	effects: [],
+	currentFiberEffects: [],
+	effectCancellations: [],
 };
+
+/** @param {Fiber} fiber */
+export function collectEffects(fiber) {
+	renderState.effects.push(...fiber.queuedEffects);
+	// Effects collected to be run
+	fiber.queuedEffects = [];
+}
+
+/** @param {Fiber} fiber */
+export function collectEffectsFromDeleted(fiber) {
+	for (const hook of fiber.hooks) {
+		if (hook.tag !== EFFECT_HOOK) continue;
+		renderState.effectCancellations.push(hook);
+	}
+}
+
+function runEffects() {
+	// Run cleanups for deleted fibers
+	for (const effectHook of renderState.effectCancellations) {
+		effectHook.cancel?.();
+	}
+
+	// Run cleanups
+	for (const effectHook of renderState.effects) {
+		effectHook.cancel?.();
+	}
+
+	// Run effects
+	for (const effectHook of renderState.effects) {
+		effectHook.cancel = effectHook.effect();
+	}
+}
 
 /**
  * @param {Fiber} rootFiber
  */
 function afterRender(rootFiber) {
 	commitRoot(rootFiber, renderState.deletions);
+	runEffects();
+
 	// The current rendered root to be reconciled against during next render
 	renderState.currentRoot = rootFiber;
 	renderState.deletions = [];
+	renderState.effects = [];
+	renderState.effectCancellations = [];
 }
 
 export function render(element, container) {

@@ -18,6 +18,7 @@ export class Fiber {
 
         // Hooks
         this.hooks = [];
+        this.queuedEffects = [];
         this.isRerenderQueued = false;
 	}
 }

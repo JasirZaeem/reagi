@@ -4,6 +4,7 @@ import {
 	EFFECT_TAG_DELETED,
 	EFFECT_TAG_UPDATED,
 } from "./reconciler.js";
+import { collectEffects, collectEffectsFromDeleted } from "./renderer.js";
 
 /** @typedef {import("./fiber.js").Fiber} Fiber */
 
@@ -55,19 +56,27 @@ function commitWork(fiber) {
 
 	// Traverse fiber tree
 	commitWork(fiber.child);
+	collectEffects(fiber);
 	commitWork(fiber.sibling);
 }
 
 /**
  * @param {Fiber} fiber
  */
-function commitDeletion(fiber) {
-	if (fiber.dom) {
+function commitDeletion(fiber, removeDom = true) {
+	let domRemoved = false;
+	if (removeDom && fiber.dom) {
 		fiber.dom.remove();
-		fiber.dom = null;
-	} else {
-		commitDeletion(fiber.child);
+		domRemoved = true;
 	}
+	fiber.dom = null;
+
+	if (!fiber.child) return;
+
+	// If dom is removed, don't need to remove for children,
+	// otherwise let removeDom propogate unchanged
+	commitDeletion(fiber.child, domRemoved ? false : removeDom);
+	collectEffectsFromDeleted(fiber);
 }
 
 /**
