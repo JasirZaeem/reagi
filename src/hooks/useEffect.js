@@ -3,8 +3,9 @@ import { renderState } from "../renderer.js";
 export const EFFECT_HOOK = "useEffect";
 
 function compareDependencies(prevDeps, nextDeps) {
-	if (!prevDeps) {
-		// Either first render, or no deps i.e. run on every render
+	if (!prevDeps || !nextDeps) {
+		// !prevDeps - Either first render, or no deps i.e. run on every render
+		// !nextDep - Old component was unmounted, new component in its place
 		return false;
 	}
 
