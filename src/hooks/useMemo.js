@@ -1,9 +1,9 @@
 import { renderState } from "../renderer.js";
 import { compareDependencies } from "./utils.js";
 
-export const EFFECT_HOOK = "useEffect";
+export const MEMO_HOOK = "useMemo";
 
-export function useEffect(setup, dependencies) {
+export function useMemo(calculateValue, dependencies) {
 	const oldHook =
 		renderState.currentFiber?.alternate?.hooks[renderState.hookIdx];
 
@@ -13,16 +13,15 @@ export function useEffect(setup, dependencies) {
 	);
 
 	const hook = {
-		tag: EFFECT_HOOK,
-		cancel: oldHook?.cancel,
-		effect: setup,
+		tag: MEMO_HOOK,
+		memoisedValue: areDependenciesSame
+			? oldHook.memoisedValue
+			: calculateValue(),
 		dependencies,
 	};
 
-	if (!areDependenciesSame) {
-		renderState.currentFiber.queuedEffects.push(hook);
-	}
-
 	renderState.currentFiber.hooks.push(hook);
 	++renderState.hookIdx;
+
+	return hook.memoisedValue;
 }
