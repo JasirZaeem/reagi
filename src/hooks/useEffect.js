@@ -39,5 +39,5 @@ export function useEffect(setup, dependencies) {
 	}
 
 	renderState.currentFiber.hooks.push(hook);
-	++renderState.hookIndex;
+	++renderState.hookIdx;
 }
