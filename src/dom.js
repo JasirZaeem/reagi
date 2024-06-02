@@ -71,12 +71,22 @@ function commitDeletion(fiber, removeDom = true) {
 	}
 	fiber.dom = null;
 
-	if (!fiber.child) return;
-
-	// If dom is removed, don't need to remove for children,
-	// otherwise let removeDom propogate unchanged
-	commitDeletion(fiber.child, domRemoved ? false : removeDom);
+	if (fiber.child) {
+		// If dom is removed, don't need to remove for children,
+		// otherwise let removeDom propogate unchanged
+		commitDeletion(fiber.child, domRemoved ? false : removeDom);
+	}
 	collectEffectsFromDeleted(fiber);
+
+	let nextSibling = fiber.sibling;
+	if (nextSibling) {
+		// If this fiber is being deleted, the parent must now have fewer children
+		// than it did during the last render. Its siblings after this, if any,
+		// should also be now removed
+		// removeDom in this case will be same as it was for this fiber.
+		commitDeletion(nextSibling, removeDom);
+		nextSibling = nextSibling.sibling;
+	}
 }
 
 /**
