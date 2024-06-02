@@ -73,7 +73,7 @@ function afterRender(rootFiber) {
 	renderState.effectCancellations = [];
 }
 
-export function render(element, container) {
+function _render(element, container) {
 	queueTask(
 		createRootFiber(
 			container,
@@ -84,6 +84,14 @@ export function render(element, container) {
 		),
 	);
 	beginWorkLoop(renderUnit, afterRender);
+}
+
+export function createRoot(container) {
+	return {
+		render: (element) => {
+			_render(element, container);
+		},
+	};
 }
 
 /**
